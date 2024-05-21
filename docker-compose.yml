@@ -31,15 +31,15 @@ services:
         ports:
             - '${FORWARD_DB_PORT:-3306}:3306'
         environment:
-            MYSQL_ALLOW_EMPTY_PASSWORD: '1'
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
             MYSQL_DATABASE: '${DB_DATABASE}'
             MYSQL_USER: '${DB_USERNAME}'
             MYSQL_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
         volumes:
             - 'sailmysql:/var/lib/mysql'
         networks:
             - sail
-        restart: always
         healthcheck:
             test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
             retries: 3
@@ -62,6 +62,10 @@ services:
             - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
         volumes:
             - 'sailmeilisearch:/data.ms'
+        environment:
+            MEILI_API_KEY: https://ms-4f2e52f94a48-9956.nyc.meilisearch.io
+            MEILI_MASTER_KEY: b43f3218001957042b16fd5e89a3bc6401c5bc0e
+            MEILI_ENV: production
         networks:
             - sail
         healthcheck:
@@ -83,16 +87,18 @@ services:
             - sail
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
+        restart: 'always'
         links:
             - mysql
         environment:
             PMA_HOST: mysql
             PMA_PORT: 3306
-            PMA_USER : root
-            PMA_PASSWORD : password
-        restart: 'always'
+            PMA_USER : '${DB_USERNAME}'
+            PMA_PASSWORD : '${DB_PASSWORD}'
         ports:
-        - 8080:80
+            - 8080:80
+        networks:
+            - sail
 networks:
     sail:
         driver: bridge
